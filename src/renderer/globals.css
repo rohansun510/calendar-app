@@ -1,0 +1,290 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   CSS 变量 — 主题系统
+   ============================================================ */
+:root {
+  --theme-color: 75 85 99;
+  --sidebar-width: 240px;
+  --font-size-base: 14px;
+  --font-size-sm: 12px;
+  --font-size-xs: 10px;
+
+  /* 浅色 — 仿 macOS 毛玻璃 */
+  --glass-bg: 255 255 255;
+  --glass-opacity-window: 0.55;
+  --glass-opacity-panel: 0.35;
+  --glass-opacity-surface: 0.25;
+  --glass-blur: 36px;
+  --glass-saturate: 200%;
+
+  --text-primary: 29 29 31;
+  --text-secondary: 99 99 102;
+  --text-tertiary: 174 174 178;
+  --border-color: 210 210 215;
+  --shadow-color: 0 0 0;
+
+  /* bg-* 变量均改为半透明，全局统一 */
+  /* bg-* 用于 hover 等交互状态，全部半透明 */
+  --bg-primary: 255 255 255;
+  --bg-secondary: 255 255 245;
+  --bg-tertiary: 235 235 240;
+  --hover-bg: 255 255 255 / 0.3;
+  --hover-bg-strong: 255 255 255 / 0.5;
+}
+
+.dark {
+  --glass-bg: 28 28 30;
+  --glass-opacity-window: 0.25;
+  --glass-opacity-panel: 0.15;
+  --glass-opacity-surface: 0.10;
+  --glass-blur: 40px;
+  --glass-saturate: 180%;
+
+  --text-primary: 245 245 247;
+  --text-secondary: 152 152 157;
+  --text-tertiary: 99 99 102;
+  --border-color: 70 70 73;
+  --shadow-color: 0 0 0;
+
+  --bg-primary: 28 28 30;
+  --bg-secondary: 35 35 38;
+  --bg-tertiary: 45 45 50;
+  --hover-bg: 255 255 255 / 0.08;
+  --hover-bg-strong: 255 255 255 / 0.14;
+}
+
+/* ============================================================
+   全局基础
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%; width: 100%; overflow: hidden;
+  font-family: 'SF Pro Display', 'Microsoft YaHei', 'PingFang SC', system-ui, -apple-system, sans-serif;
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  background: transparent;
+  color: rgb(var(--text-primary));
+  user-select: none;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(var(--text-tertiary) / 0.4); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--text-secondary) / 0.6); }
+
+/* ============================================================
+   毛玻璃层叠系统 — 仿 macOS Vibrancy
+   ============================================================ */
+
+/* 最外层窗口 — 立体玻璃板效果 */
+.glass-window {
+  /* 玻璃体底色 */
+  background:
+    /* 顶部高光条（模拟玻璃上边缘受光） */
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.18) 0%,
+      rgba(255,255,255,0.06) 2px,
+      rgba(255,255,255,0.02) 6px,
+      transparent 14px
+    ),
+    /* 整体半透明 */
+    rgba(var(--glass-bg) / var(--glass-opacity-window));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: none;
+  border-radius: 12px;
+}
+
+.dark .glass-window {
+  background:
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.08) 0%,
+      rgba(255,255,255,0.03) 2px,
+      rgba(255,255,255,0.01) 6px,
+      transparent 14px
+    ),
+    rgba(var(--glass-bg) / var(--glass-opacity-window));
+  box-shadow: none;
+}
+
+/* 面板 — 用于侧边栏，比主窗口更通透 */
+.glass-panel {
+  background:
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.06) 0%,
+      transparent 10px
+    ),
+    rgba(var(--glass-bg) / var(--glass-opacity-panel));
+  backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+  box-shadow:
+    0 0 2px rgba(0,0,0,0.02) inset,
+    0 0 2px rgba(255,255,255,0.05) inset;
+}
+
+.dark .glass-panel {
+  background:
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.03) 0%,
+      transparent 10px
+    ),
+    rgba(var(--glass-bg) / var(--glass-opacity-panel));
+  box-shadow:
+    0 0 2px rgba(0,0,0,0.08) inset,
+    0 0 2px rgba(255,255,255,0.02) inset;
+}
+
+/* 表面 — 卡片和列表项悬停 */
+.glass-surface {
+  background: rgba(var(--glass-bg) / var(--glass-opacity-surface));
+  backdrop-filter: blur(8px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturate));
+  box-shadow:
+    inset 0 0.5px 0 rgba(255,255,255,0.08),
+    0 0.5px 1px rgba(0,0,0,0.03);
+  border: 0.5px solid rgba(var(--border-color) / 0.15);
+  border-radius: 8px;
+}
+
+/* 输入框毛玻璃 */
+.glass-input {
+  background: rgba(var(--glass-bg) / 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(var(--border-color) / 0.3);
+}
+
+.glass-input:focus {
+  background: rgba(var(--glass-bg) / 0.7);
+  border-color: rgba(var(--theme-color) / 0.4);
+  box-shadow: 0 0 0 3px rgba(var(--theme-color) / 0.1);
+}
+
+/* ============================================================
+   面板拖拽调整大小 (Resizable Panels)
+   ============================================================ */
+.resize-handle-v {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  position: relative;
+}
+.resize-handle-v:hover,
+.resize-handle-v.active {
+  background: rgba(var(--theme-color) / 0.25);
+}
+.resize-handle-v::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px; height: 20px;
+  border-radius: 1px;
+  background: rgba(var(--text-tertiary) / 0.3);
+}
+.resize-handle-v:hover::after,
+.resize-handle-v.active::after {
+  background: rgba(var(--theme-color) / 0.5);
+}
+
+.resize-handle-h {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  position: relative;
+}
+.resize-handle-h:hover,
+.resize-handle-h.active {
+  background: rgba(var(--theme-color) / 0.25);
+}
+.resize-handle-h::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  height: 1px; width: 20px;
+  border-radius: 1px;
+  background: rgba(var(--text-tertiary) / 0.3);
+}
+.resize-handle-h:hover::after,
+.resize-handle-h.active::after {
+  background: rgba(var(--theme-color) / 0.5);
+}
+
+/* ============================================================
+   可拖拽区域
+   ============================================================ */
+.drag-region { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
+
+/* ============================================================
+   动画
+   ============================================================ */
+.animate-fade-in { animation: fadeIn 0.2s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
+.animate-slide-up { animation: slideUp 0.2s ease-out; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============================================================
+   待办复选框 macOS 风格
+   ============================================================ */
+.mac-checkbox {
+  appearance: none;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--border-color) / 0.6);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  position: relative;
+  background: rgba(var(--glass-bg) / 0.4);
+}
+.mac-checkbox:checked {
+  background: rgb(var(--theme-color));
+  border-color: rgb(var(--theme-color));
+}
+.mac-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 5px;
+  width: 4px; height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.mac-checkbox:hover { border-color: rgb(var(--theme-color)); }
+
+/* 已完成待办 */
+.todo-completed { text-decoration: line-through; opacity: 0.45; }
+
+/* ============================================================
+   基础元素
+   ============================================================ */
+input, textarea, select { font-family: inherit; }
+
+*:focus-visible {
+  outline: 2px solid rgba(var(--theme-color) / 0.4);
+  outline-offset: 0px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   分割线
+   ============================================================ */
+.divider {
+  height: 1px;
+  background: rgba(var(--border-color) / 0.25);
+  margin: 0;
+}
