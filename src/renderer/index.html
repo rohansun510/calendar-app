@@ -7,6 +7,11 @@
   </head>
   <body class="overflow-hidden">
     <div id="root"></div>
+    <div id="err" style="display:none;padding:20px;color:red;font:12px monospace;background:#fff;position:fixed;inset:0;z-index:99999;overflow:auto;white-space:pre-wrap;user-select:text;cursor:text;"></div>
+    <script>
+      window.onerror = function(m,u,l,c,e){var d=document.getElementById('err');d.style.display='block';d.textContent='ERROR: '+m+'\nFile: '+u+'\nLine: '+l+'\n'+(e&&e.stack||'');};
+      window.addEventListener('unhandledrejection',function(ev){var d=document.getElementById('err');d.style.display='block';d.textContent='PROMISE ERROR: '+(ev.reason&&(ev.reason.stack||ev.reason.message||ev.reason));});
+    </script>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

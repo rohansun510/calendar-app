@@ -7,6 +7,10 @@ import TitleBar from '@/components/layout/TitleBar'
 import Sidebar from '@/components/layout/Sidebar'
 import MainPanel from '@/components/layout/MainPanel'
 import StatusBar from '@/components/layout/StatusBar'
+import PomodoroTimer from '@/components/pomodoro/PomodoroTimer'
+import PomodoroStats from '@/components/pomodoro/PomodoroStats'
+import PomodoroKanban from '@/components/pomodoro/PomodoroKanban'
+import { usePomodoroStore } from '@/stores/pomodoroStore'
 import { getTodayStr } from '@/lib/calendar'
 
 export default function App() {
@@ -14,6 +18,7 @@ export default function App() {
   const { loadAll: loadEvents } = useEventStore()
   const { loadAll: loadTodos } = useTodoStore()
   const { loadAll: loadCategories } = useCategoryStore()
+  const { loadAll: loadPomodoroSessions, showStats, showKanban, setShowStats, setShowKanban, setShowTimer } = usePomodoroStore()
   const [selectedDate, setSelectedDate] = useState(getTodayStr())
 
   // 面板大小（从 localStorage 恢复）
@@ -33,7 +38,7 @@ export default function App() {
   useEffect(() => {
     async function init() {
       await loadSettings()
-      await Promise.all([loadEvents(), loadTodos(), loadCategories()])
+      await Promise.all([loadEvents(), loadTodos(), loadCategories(), loadPomodoroSessions()])
     }
     init()
   }, [])
@@ -87,6 +92,9 @@ export default function App() {
     }
   }, [dragging, handleMouseMove, handleMouseUp])
 
+  const { settings } = useSettingsStore()
+  const sidebarLeft = settings.sidebarPosition !== 'right'
+
   if (!loaded) {
     return (
       <div className="h-screen flex items-center justify-center bg-transparent">
@@ -99,8 +107,10 @@ export default function App() {
     <div className="h-screen flex flex-col overflow-hidden text-[rgb(var(--text-primary))]
                     glass-window rounded-xl">
       <TitleBar />
-      <div className="flex flex-1 overflow-hidden rounded-b-xl" ref={containerRef}>
-        {/* 左侧日历 */}
+      <div className="flex flex-1 overflow-hidden rounded-b-xl"
+           style={{ flexDirection: sidebarLeft ? 'row' : 'row-reverse' }}
+           ref={containerRef}>
+        {/* 月历面板 */}
         <div style={{ width: sidebarWidth, flexShrink: 0 }}>
           <Sidebar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
@@ -120,6 +130,9 @@ export default function App() {
         />
       </div>
       <StatusBar />
+      <PomodoroTimer />
+      {showStats && <PomodoroStats onBack={() => { setShowStats(false); setShowTimer(true) }} onClose={() => setShowStats(false)} />}
+      {showKanban && <PomodoroKanban onBack={() => { setShowKanban(false); setShowTimer(true) }} onClose={() => setShowKanban(false)} />}
     </div>
   )
 }

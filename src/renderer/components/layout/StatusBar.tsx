@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useEventStore } from '@/stores/eventStore'
+import { usePomodoroStore } from '@/stores/pomodoroStore'
 import type { CalendarEvent } from '@/types'
 
 export default function StatusBar() {
   const { events } = useEventStore()
+  const { setShowTimer, showTimer } = usePomodoroStore()
   const [nextReminder, setNextReminder] = useState<CalendarEvent | null>(null)
 
   useEffect(() => {
@@ -19,14 +21,23 @@ export default function StatusBar() {
   return (
     <footer className="h-[28px] flex items-center px-4 text-xs border-t border-[rgb(var(--border-color)/0.3)]
                       bg-transparent text-[rgb(var(--text-tertiary))]">
-      {nextReminder ? (
-        <span>
-          💡 下一次提醒：
-          {formatNextReminder(nextReminder)}
-        </span>
-      ) : (
-        <span>没有待提醒的日程</span>
-      )}
+      <span className="flex-1">
+        {nextReminder ? (
+          <>💡 下一次提醒：{formatNextReminder(nextReminder)}</>
+        ) : (
+          '没有待提醒的日程'
+        )}
+      </span>
+      <button
+        onClick={() => {
+          if (showTimer && usePomodoroStore.getState().activeSession) return
+          setShowTimer(!showTimer)
+        }}
+        className={`px-2 py-0.5 rounded text-xs transition-colors ${
+          showTimer ? 'bg-[rgb(var(--theme-color))] text-white' : 'hover:bg-[rgba(var(--glass-bg)/0.3)]'
+        }`}
+        title="番茄钟"
+      >🍅</button>
     </footer>
   )
 }

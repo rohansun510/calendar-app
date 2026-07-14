@@ -65,6 +65,7 @@ export interface AppSettings {
   language: 'zh-CN' | 'en'
   fontSize: 'small' | 'medium' | 'large'
   glassOpacity: number   // 0-100, 窗口透明度百分比
+  sidebarPosition: 'left' | 'right'  // 月历位置
 }
 
 /** 默认设置 */
@@ -75,6 +76,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   language: 'zh-CN',
   fontSize: 'medium',
   glassOpacity: 55,
+  sidebarPosition: 'left',
 }
 
 /** 预设主题色 */
@@ -140,3 +142,22 @@ export const REMINDER_OPTIONS = [
   { value: 60, label: '1 小时前' },
   { value: 1440, label: '1 天前' },
 ]
+
+/** 番茄钟记录 */
+export interface PomodoroSession {
+  id: string
+  todoId: string | null
+  startTime: string
+  endTime: string | null
+  durationMinutes: number
+  actualMinutes: number
+  status: 'running' | 'paused' | 'completed' | 'cancelled'
+  category: 'focus' | 'short_break' | 'long_break'
+  createdAt: string
+}
+
+export const POMODORO_PRESETS = {
+  focus: { label: '专注', minutes: 25, icon: '🍅' },
+  short_break: { label: '短休', minutes: 5, icon: '☕' },
+  long_break: { label: '长休', minutes: 15, icon: '🌿' },
+} as const

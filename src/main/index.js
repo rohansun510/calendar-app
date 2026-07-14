@@ -50,7 +50,12 @@ async function initDatabase() {
     id TEXT PRIMARY KEY, name TEXT NOT NULL, color TEXT DEFAULT '#6b7280',
     created_at TEXT DEFAULT (datetime('now','localtime')))`)
   db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`)
-
+  db.run(`CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+    id TEXT PRIMARY KEY, todo_id TEXT DEFAULT NULL,
+    start_time TEXT NOT NULL, end_time TEXT DEFAULT NULL,
+    duration_minutes INTEGER NOT NULL, actual_minutes INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'running', category TEXT DEFAULT 'focus',
+    created_at TEXT DEFAULT (datetime('now','localtime')))`)
   if (queryOne('SELECT COUNT(*) as c FROM categories').c === 0) {
     execute('INSERT INTO categories (id,name,color) VALUES (?,?,?)', ['cat_work','工作','#ef4444'])
     execute('INSERT INTO categories (id,name,color) VALUES (?,?,?)', ['cat_personal','个人','#3b82f6'])
@@ -58,7 +63,7 @@ async function initDatabase() {
   }
   if (queryOne('SELECT COUNT(*) as c FROM settings').c === 0) {
     execute('INSERT INTO settings (key,value) VALUES (?,?)', ['app_settings',
-      JSON.stringify({ themeColor:'#4b5563', themeMode:'system', weekStartDay:1, language:'zh-CN', fontSize:'medium', glassOpacity:55 })])
+      JSON.stringify({ themeColor:'#4b5563', themeMode:'system', weekStartDay:1, language:'zh-CN', fontSize:'medium', glassOpacity:55, sidebarPosition:'left' })])
   }
   saveDb()
   console.log('[DB] 初始化完成')
@@ -203,6 +208,22 @@ function registerIpc() {
     return queryOne('SELECT * FROM todos WHERE id=?', [id])
   })
   ipcMain.handle('todos:reorder', (_, ids) => { ids.forEach((id,i) => execute('UPDATE todos SET sort_order=? WHERE id=?',[i,id])); return {success:true} })
+
+  // 番茄钟
+  ipcMain.handle('pomodoro:get-all', () => queryAll('SELECT * FROM pomodoro_sessions ORDER BY created_at DESC'))
+  ipcMain.handle('pomodoro:get-today', () => queryAll("SELECT * FROM pomodoro_sessions WHERE date(start_time)=date('now','localtime') ORDER BY created_at DESC"))
+  ipcMain.handle('pomodoro:create', (_, data) => {
+    const id = uuidv4()
+    execute('INSERT INTO pomodoro_sessions (id,todo_id,start_time,duration_minutes,status,category) VALUES (?,?,?,?,?,?)',
+      [id, data.todoId || null, data.startTime, data.durationMinutes, data.status || 'running', data.category || 'focus'])
+    return queryOne('SELECT * FROM pomodoro_sessions WHERE id=?', [id])
+  })
+  ipcMain.handle('pomodoro:update', (_, id, data) => {
+    execute("UPDATE pomodoro_sessions SET end_time=?,actual_minutes=?,status=? WHERE id=?",
+      [data.endTime || null, data.actualMinutes || 0, data.status, id])
+    return queryOne('SELECT * FROM pomodoro_sessions WHERE id=?', [id])
+  })
+  ipcMain.handle('pomodoro:delete', (_, id) => { execute('DELETE FROM pomodoro_sessions WHERE id=?', [id]); return {success:true} })
 
   // 分类
   ipcMain.handle('categories:get-all', () => queryAll('SELECT * FROM categories ORDER BY created_at ASC'))

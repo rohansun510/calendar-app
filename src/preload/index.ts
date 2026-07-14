@@ -38,6 +38,13 @@ const api = {
   exportJson: () => ipcRenderer.invoke('export:json'),
   importJson: () => ipcRenderer.invoke('import:json'),
 
+  // 番茄钟
+  pomodoroGetAll: () => ipcRenderer.invoke('pomodoro:get-all'),
+  pomodoroGetToday: () => ipcRenderer.invoke('pomodoro:get-today'),
+  pomodoroCreate: (data: any) => ipcRenderer.invoke('pomodoro:create', data),
+  pomodoroUpdate: (id: string, data: any) => ipcRenderer.invoke('pomodoro:update', id, data),
+  pomodoroDelete: (id: string) => ipcRenderer.invoke('pomodoro:delete', id),
+
   // 窗口控制
   minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
   maximizeWindow: () => ipcRenderer.invoke('window:maximize'),
