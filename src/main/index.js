@@ -294,11 +294,11 @@ function moveWindowToBottom(win) {
     const hwndBuf = win.getNativeWindowHandle()
     const hwnd = hwndBuf.readBigUInt64LE(0)
     // HWND_BOTTOM = 1, flags = SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE = 0x0013
-    const cmd = `powershell -NoProfile -Command "Add-Type -Name W32 -Namespace T -MemberDefinition '[DllImport(\\\"user32.dll\\\")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int c, int cy, uint f);'; [T.W32]::SetWindowPos([IntPtr]::new(${hwnd}), [IntPtr]::new(1), 0, 0, 0, 0, 0x0013)"`
-    exec(cmd, (err) => {
-      if (err) console.error('[底层] 设置失败:', err.message)
-      else console.log('[底层] 窗口已移至底层')
-    })
+    // 写入临时 .bat 用 start /min 执行，确保无窗口闪现
+    const ps = `Add-Type -Name W32 -Namespace T -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h,IntPtr a,int x,int y,int c,int cy,uint f);';[T.W32]::SetWindowPos([IntPtr]::new(${hwnd}),[IntPtr]::new(1),0,0,0,0,0x0013)`
+    const bat = path.join(app.getPath('temp'), 'cal-bg.bat')
+    fs.writeFileSync(bat, `@echo off\r\nstart /min powershell -NoProfile -Command "${ps}"\r\ndel "%~f0"\r\n`)
+    exec(`start /min cmd /c "${bat}"`, { windowsHide: true })
   } catch (e) {
     console.error('[底层] 错误:', e.message)
   }
@@ -414,9 +414,13 @@ function createWindow() {
   mainWindow.on('maximize', () => mainWindow?.webContents.send('window:maximizeChange', true))
   mainWindow.on('unmaximize', () => mainWindow?.webContents.send('window:maximizeChange', false))
 
-  // 开机自启
+  // 开机自启（使用 Electron 原生 API，写入注册表）
   ipcMain.handle('app:setAutoStart', (_e, enable) => {
-    app.setLoginItemSettings({ openAtLogin: enable, path: process.execPath })
+    if (enable && !app.isPackaged) {
+      console.warn('[开机自启] 开发模式下不支持开机自启，请使用正式版')
+      return enable
+    }
+    app.setLoginItemSettings({ openAtLogin: enable })
     return enable
   })
   ipcMain.handle('app:getAutoStart', () => app.getLoginItemSettings().openAtLogin)
